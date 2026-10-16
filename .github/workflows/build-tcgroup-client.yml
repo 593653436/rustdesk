@@ -101,10 +101,6 @@ jobs:
               build-args: "--vram",
             }
     steps:
-      - name: Apply TCGROUP customization
-        shell: pwsh
-        run: |
-          pwsh -File ./.github/tcgroup/apply-tcgroup.ps1
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
         with:
@@ -116,6 +112,11 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           submodules: recursive
+
+      - name: Apply TCGROUP customization
+        shell: pwsh
+        run: |
+          pwsh -File ./.github/tcgroup/apply-tcgroup.ps1
 
       - name: Restore bridge files
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
