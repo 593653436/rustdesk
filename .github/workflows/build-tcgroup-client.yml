@@ -1,13 +1,11 @@
 # TCGROUP 定制客户端构建（Windows x86_64）
 #
 # 由官方 flutter-build.yml 抽取：仅保留 Windows 构建所需的 3 个 job
-#   generate-bridge                    → 产出 bridge-artifact
-#   build-RustDeskTempTopMostWindow    → 产出窗口注入 artifact
-#   build-for-windows-flutter          → 主构建（x86_64 / windows-2022）
-# 并新增一步 "Apply TCGROUP customization" 应用品牌化与服务器补丁。
+#   generate-bridge / build-RustDeskTempTopMostWindow / build-for-windows-flutter
+# 矩阵只保留 x86_64（windows-2022），并新增一步应用 TCGROUP 定制。
 #
-# 没有 RustDesk 的签名 secret 时：SIGN_BASE_URL 会等于 "-2"，
-# 所有 Sign 步骤的 if 条件自动为假 → 跳过，直接产出未签名产物。
+# 没有 RustDesk 签名 secret 时 SIGN_BASE_URL == "-2"，所有 Sign 步骤自动跳过，
+# 由 Upload unsigned 产出未签名产物。Publish Release 已禁用（fork 无 contents:write）。
 
 name: Build TCGROUP Client (Windows x64)
 
@@ -74,6 +72,7 @@ jobs:
               platform: x64,
             }
           - {
+              target: windows-11-arm,
               platform: ARM64,
             }
     with:
@@ -101,21 +100,11 @@ jobs:
               vcpkg-triplet: x64-windows-static,
               build-args: "--vram",
             }
-          - {
-              target: aarch64-pc-windows-msvc,
-              arch: aarch64,
-              flutter-arch: arm64,
-              vcpkg-triplet: arm64-windows-static,
-              # vram is x86/x64-only (NVENC needs CUDA, Intel MediaSDK needs __rdtsc);
-              # no NV/Intel/AMD hardware exists on Windows-on-ARM, so vram stays disabled here.
-              build-args: "",
-            }
     steps:
-
-        - name: Apply TCGROUP customization
-          shell: pwsh
-          run: |
-            pwsh -File ./.github/tcgroup/apply-tcgroup.ps1
+      - name: Apply TCGROUP customization
+        shell: pwsh
+        run: |
+          pwsh -File ./.github/tcgroup/apply-tcgroup.ps1
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
         with:
@@ -433,7 +422,7 @@ jobs:
 
       - name: Publish Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
-          if: false
+        if: false
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
